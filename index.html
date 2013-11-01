@@ -1,0 +1,497 @@
+<html>
+<head>
+  <meta charset="utf-8"> 
+
+  <link type="text/css" rel="stylesheet" href="http://cdn.jsdelivr.net/codemirror/3.14.0/codemirror.css" />
+  <link type="text/css" rel="stylesheet" href="http://cdn.jsdelivr.net/codemirror/3.14.0/theme/solarized.css" />
+  
+  <script type="text/javascript" src="http://cdn.jsdelivr.net/codemirror/3.14.0/codemirror.min.js"></script>
+  <script type="text/javascript" src="boo-mode.js"></script>
+
+  <script src="http://codeorigin.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://codeorigin.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+  <link rel="stylesheet" href="http://codeorigin.jquery.com/ui/1.10.3/themes/mint-choc/jquery-ui.css"></script>
+
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-layout/1.3.0-rc-30.79/jquery.layout.min.js"></script>
+  <link type="text/css" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/jquery-layout/1.3.0-rc-30.79/layout-default.min.css" />
+
+  <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.css" rel="stylesheet">
+
+
+  <script>
+  $(document).ready(function () {
+    var layout = $('body').layout({ 
+      //applyDefaultStyles: true 
+      defaults: {
+        fxName: "slide",
+        // fxSpeed: "slow",
+        initClosed: true,
+        resizable: true,
+        spacing_closed: 14,
+        spacing_open: 14
+      },
+      center: {
+        fxName: 'none',
+        closable: false,
+        spacing_open: 0,
+        // initClosed: false,
+      },
+      north: {
+        initClosed:            false,
+        resizable:             false,
+        spacing_closed:        0,
+        spacing_open:          0,
+      },
+      south: {
+        initClosed: true,
+        resizable: true,
+        spacing_closed: 14,
+        spacing_open: 14,
+        size: '50%',
+        togglerTip_open:    "Close console",
+        togglerTip_closed:    "Open console",
+        resizerTip_open:    "Resize console",
+        slideTrigger_open:    "mouseover",
+      },
+      east: {
+        spacing_closed: 14,
+        spacing_open: 14,
+        initClosed: true,    
+        togglerTip_open:    "Close library",
+        togglerTip_closed:    "Open library",
+        resizerTip_open:    "Resize library",
+      }
+
+    });
+
+    // CREATE SPANs for pin-buttons - using a generic class as identifiers
+    // $('<span><i class="fa fa-camera-retro"></i></span>').addClass('pin-button').prependTo( 'body > .ui-layout-south' );
+    // BIND events to pin-buttons to make them functional
+    // layout.addPinBtn( 'body > .ui-layout-south .pin-button', 'south');
+
+    var progressbar = $( "#progressbar" ),
+        progressLabel = $( ".progress-label" );
+    progressbar.progressbar({
+      value: false,
+      change: function() {
+        progressLabel.text( progressbar.progressbar( "value" ) + "%" );
+      },
+      complete: function() {
+        progressLabel.text( "Complete!" );
+      }
+    });
+
+    $( "#dialog-compilation" ).dialog({
+      closeOnEscape: false,
+      modal: true,
+      autoOpen: false,
+      draggable: false,
+      resizable: false,
+      height: 100,
+      show: {effect: 'fade', duration: 250},
+      hide: {effect: 'fade', duration: 250},
+      // Hide close button
+      open: function(event, ui) { $(".ui-dialog-titlebar-close").hide(); }
+    });    
+
+    //$('#suffle').button();
+    //$('#repeat').buttonset();
+
+    $('#runit').click(function(){
+        var dialog = $('#dialog-compilation');
+        dialog.dialog('open');
+
+        var code = editor.getValue();
+
+        $.ajax({
+          url: 'http://71.19.154.9/tryboo/compile',
+          type: 'POST',
+          accepts: 'text/plain',
+          contentType: 'text/plain; charset=UTF-8',
+          data: code.replace(/\s+$/, ''),
+          dataType: 'text',
+          success: function(data) {
+            if (!data) {
+              this.error();
+              return;
+            }
+
+            data = data.replace(/^>\s\s?/gm, '');
+            var lines = data.split(/\r?\n/);
+            var stdout = [];
+
+            $(lines).each(function(i, ln){
+              if (/^-{3,}$/.test(ln)) {
+                stdout.push('<hr />');
+                return
+              }
+
+              if (/^<time\s+name=/.test(ln)) {
+                return;
+              }
+
+              if (/^EXITCODE:\s\d+/.test(ln)) {
+                // var status = $('#run-status').removeClass('success').removeClass('failure');
+                // if (ln == 'EXITCODE: 0') {
+                //     status.addClass('success').html('Execution successful, congrats!');
+                // } else {
+                //     status.addClass('failure').html('Damn it! something went wrong, check for errors below :-(');
+                // }
+                // status.fadeIn();
+                return;
+              }
+
+              ln = ln.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              if (!ln.length) return;
+
+              if (/BCE\d+/.test(ln)) {
+                ln = '<span class="error">' + ln + '</span>';
+              } else if (/BCW\d+/.test(ln)) {
+                ln = '<span class="warning">' + ln + '</span>';
+              }
+
+              stdout.push(ln);
+            });
+
+            var console = $('#console')
+
+            console.append('<hr/>' + stdout.join('\n'));
+
+            // Keep the viewport at the bottom
+            var south = $('.ui-layout-south');
+            south.animate({scrollTop: south.prop('scrollHeight')});
+            
+            layout.open('south');
+            dialog.dialog('close');  
+          },
+          error: function(error) {
+            var stdout = $('#console');
+            stdout.append('<hr />' + '<span class="error">Error when querying the remote compiler</span>');
+            console.error(error);
+
+            layout.open('south');
+            dialog.dialog('close');  
+          }
+        });
+    });
+
+
+    // Setup the editor
+    var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+      mode: "boo",
+      theme: "solarized",
+      indentUnit: 4,
+      tabSize: 4,
+      lineNumbers: true,
+      autofocus: true
+    });
+
+
+    function unbase64(s) {
+      var e={},i,k,v=[],r='',w=String.fromCharCode;
+      var n=[[65,91],[97,123],[48,58],[43,44],[47,48]];
+
+      s = s.replace(/\n/g, '');
+
+      for(z in n){for(i=n[z][0];i<n[z][1];i++){v.push(w(i));}}
+      for(i=0;i<64;i++){e[v[i]]=i;}
+
+      for(i=0;i<s.length;i+=72){
+      var b=0,c,x,l=0,o=s.substring(i,i+72);
+           for(x=0;x<o.length;x++){
+                  c=e[o.charAt(x)];b=(b<<6)+c;l+=6;
+                  while(l>=8){r+=w((b>>>(l-=8))&255);}
+           }
+      }
+      return r.replace(/\0/g, '');
+    }
+
+    // Fetch a given file
+    function updateByHash() {
+      var hash = window.location.hash;
+      hash = hash.replace(/^#/, '');
+      if (hash.length) {
+        if (!/\.boo$/.test(hash))
+          hash += '.boo';
+
+        $.ajax({
+          url: 'https://api.github.com/repos/bamboo/boo/contents/tests/testcases/integration/' + hash,
+          dataType: 'jsonp',
+          success: function(resp){
+            try {
+              var code = unbase64(resp.data.content);
+            } catch(e) {
+              console.error(e);
+              alert('Error fetching "' + hash + '" form GitHub');
+              return;
+            }
+            code = code.replace(/\t/g, '    ').replace(/\r\n/g, '\n');
+            editor.setValue(code);
+          },
+          error: function(e) {
+            alert('Sorry, unable to obtain the example from github');
+          }
+        });
+        return true;
+      }
+    }
+    window.onhashchange = updateByHash;
+    updateByHash();
+
+
+
+    var accordion = $('#examples');
+
+    // Get all examples
+    $.ajax({
+      url: 'https://api.github.com/repos/bamboo/boo/contents/tests/testcases/integration',
+      dataType: 'jsonp',
+      success: function(resp){
+        $(resp.data).each(function(i, dir){
+          if (dir.type == 'dir') {
+            $('<h3><a href="#">' + dir.name + '</a></h3>').
+              appendTo(accordion).
+              data('github', dir);
+            $('<div>Loading...</div>').appendTo(accordion);
+          }
+        });
+        accordion.accordion({
+          collapsible: true,
+          active: false,
+          heightStyle: "content",
+          activate: function(event, ui) {
+            var panel = ui.newPanel,
+                dir = ui.newHeader.data('github');
+
+            if (dir) {
+              $.ajax({
+                url: dir.url,
+                dataType: 'jsonp',
+                success: function(resp){
+                  ui.newHeader.data('github', null);
+                  var files = $('<ul></ul>').appendTo(panel.empty());
+                  $(resp.data).each(function(i, file){
+                    files.append('<li><a href="#' + dir.name + '/' + file.name + '">' + 
+                      file.name.replace(/\.boo$/, '').replace(/-/g, ' ') + 
+                      '</a></li>');
+                  });
+                  accordion.accordion("refresh");
+                }
+              });
+            }
+          }
+        });
+      },
+      error: function(error){ alert(error); }
+    })
+
+  });
+  </script>
+  
+  <style>
+  html {  
+      height: 100%;  
+      background: #e3e3e0;  
+  }  
+  body {
+    font-size: 12pt;
+    margin: 0;
+    padding: 0;
+  }
+  a {  
+    text-decoration: none;  
+  }  
+  :focus, :active {  
+      outline: 0;  
+  } 
+
+
+  .ui-accordion-content {
+    padding: 0 !important;
+  }
+  .ui-accordion-content ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ui-accordion-content ul li {
+    margin: 0;
+    padding: 0em 0.2em;
+    border-bottom: 1px solid #888;
+  }
+  .ui-accordion-content ul a {
+    display: block;
+    font-weight: normal;
+  }
+  .ui-accordion-content ul a:hover {
+    color: #9bcc60;
+  }
+
+
+
+  .ui-layout-pane-center {
+    padding: 0; /* allow the editor to fill it completely */
+  }
+
+  .ui-layout-pane-north, .ui-layout-pane-east {
+    padding: 0;
+  }
+  #toolbar {
+    border-radius: 0;
+  }
+
+  .ui-layout-pane-south {
+    color: #f1f1f1;
+    background-color: #222;
+  }
+
+  .pin-button {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 2;
+    display: block;
+    cursor: pointer;
+  }
+  .button-pin-down {
+  }
+  .button-pin-up {
+  }
+
+  .CodeMirror {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+  }
+
+  .button {
+      display: inline-block;
+      background: #83a01c;
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b6d14c), color-stop(100%,#83a01c));
+      background: -moz-linear-gradient(center top, #b6d14c 0%, #83a01c 100%);
+      DIS-webkit-box-shadow: 0px 1px 0px 0px #d1f25a inset, 0px -1px 0px 0px #99bc27 inset, 1px 2px 5px 0px #c9c9c9;
+      DIS-moz-box-shadow: 0px 1px 0px 0px #d1f25a inset, 0px -1px 0px 0px #99bc27 inset, 1px 2px 5px 0px #c9c9c9;
+      DIS-box-shadow: 0px 1px 0px 0px #d1f25a inset, 0px -1px 0px 0px #99bc27 inset, 1px 2px 5px 0px #c9c9c9;
+      -webkit-border-radius: 5px;
+      -moz-border-radius: 5px;
+      border-radius: 5px;
+      text-shadow: 1px 1px 0px #648018;
+      padding: 10px 20px;
+      display: block;
+      border-color: #97b134;
+      border-width: 1px;
+      border-style: solid;
+      font-family: Lucida Grande, arial;
+      font-size: 14px;
+      color: #FFFFFF;
+      font-weight: bold;
+  }
+  .button:hover {
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bbda4c), color-stop(100%,#84a01d));
+      background: -moz-linear-gradient(center top, #bbda4c 0%, #84a01d 100%);
+      text-shadow: 4px 1px 5px #;
+  }
+  .button:active {
+      background: #84a01d;
+      -webkit-box-shadow: 0px 2px 5px 0px #59691b inset;
+      -moz-box-shadow: 0px 2px 5px 0px #59691b inset;
+      box-shadow: 0px 2px 5px 0px #59691b inset;
+      text-shadow: 0px 0px 2px #242e07;
+      border-color: #5c6b2f;
+  }
+
+  #console {
+    padding: .5em;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 19px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: scroll;
+    counter-reset: line-numbering;
+  }
+
+  #console hr {
+    margin: 0;
+    border: none;
+    border-top: 1px solid rgb(230, 230, 150);
+  }
+
+  #console .error {
+    font-weight: bold;
+    color: red;
+  }
+  #console .warning {
+    font-style: italic;
+    color: orange;
+  }
+
+  </style>
+</head>
+<body>
+  <div class="ui-layout-center">
+      <textarea id="code">
+"""
+    ___            __
+   / _ )___  ___  / /
+  / _  / _ \/ _ \/_/ 
+ /____/\___/\___(_)  
+                    
+-+* You are inside an online editor. 
+               Make your changes and run it! *+-
+
+The program must compile and complete execution under 5
+seconds. You can use any .Net standard class but note 
+that there are no network interfaces available to the 
+program. File IO is allowed and you can write something
+to disk in the current directory, however the space 
+available is just a few kilobytes and the contents are
+destroyed after each run.
+"""
+
+def foo(boo):
+    print "Credits"
+    print "=" * 7
+    print "Boo compiler by Rodrigo B. de Oliveira"
+    print "Online compiler by Iván -DrSlump- Montes"
+    print ""
+    print "Remember, this is $boo not Python!"
+
+foo('BOO')
+    </textarea>
+  </div>
+
+  <div class="ui-layout-north">
+    <span style="float: right">TryBoo v0.1</span>
+
+    <div id="toolbar" class="ui-widget-header ui-corner-all">
+      <button id="runit" class="button">Run it!</button>
+    </div>
+
+  </div>
+  
+  <div class="ui-layout-south">
+    <pre id="console">
+## Console output
+
+The results of compiling and running the source code above will be shown here.
+
+## Credits
+
+Boo compiler by Rodrigo B. de Oliveira
+Online compiler by Iván -DrSlump- Montes
+    </pre>
+  </div>
+  
+  <div class="ui-layout-east">
+    <div id="examples">
+    </div> 
+  </div>
+
+
+  <div id="dialog-compilation" title="Compilation in process">
+    <div id="progressbar"></div>
+  </div>
+
+</body>
+</html>

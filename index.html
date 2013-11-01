@@ -426,6 +426,13 @@
     color: orange;
   }
 
+  #logo {
+    float: right;
+    color: white;
+    font-weight: bold;
+    font-size: 120%;
+  }
+
   </style>
 </head>
 <body>
@@ -462,7 +469,9 @@ foo('BOO')
   </div>
 
   <div class="ui-layout-north">
-    <span style="float: right">TryBoo v0.1</span>
+    <div id="logo">
+      TryBoo v0.1
+    </div>
 
     <div id="toolbar" class="ui-widget-header ui-corner-all">
       <button id="runit" class="button">Run it!</button>

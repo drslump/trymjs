@@ -6,11 +6,12 @@
   <link type="text/css" rel="stylesheet" href="http://cdn.jsdelivr.net/codemirror/3.14.0/theme/solarized.css" />
   
   <script type="text/javascript" src="http://cdn.jsdelivr.net/codemirror/3.14.0/codemirror.min.js"></script>
+  <script type="text/javascript" src="http://cdn.jsdelivr.net/codemirror/3.14.0/mode/javascript/javascript.js"></script>
   <script type="text/javascript" src="boo-mode.js"></script>
 
   <script src="http://codeorigin.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="http://codeorigin.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
-  <link rel="stylesheet" href="http://codeorigin.jquery.com/ui/1.10.3/themes/mint-choc/jquery-ui.css"></script>
+  <link rel="stylesheet" href="http://codeorigin.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"></script>
 
   <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-layout/1.3.0-rc-30.79/jquery.layout.min.js"></script>
   <link type="text/css" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/jquery-layout/1.3.0-rc-30.79/layout-default.min.css" />
@@ -20,11 +21,25 @@
 
   <script>
   $(document).ready(function () {
+
+    // Init widgets first to allow the layout plugin to get proper dimensions
+    $('#runit').button();
+    $('#lang-selector').tooltip();
+    $('#lang-selector').buttonset();
+    
+    $('#lang-selector-boojs').click(function(){
+      layoutCode.show('east', false);
+      refresh_editors();
+    });
+    $('#lang-selector-boo').click(function(){
+      layoutCode.hide('east');
+      refresh_editors();
+    });
+
+
     var layout = $('body').layout({ 
-      //applyDefaultStyles: true 
       defaults: {
         fxName: "slide",
-        // fxSpeed: "slow",
         initClosed: true,
         resizable: true,
         spacing_closed: 14,
@@ -34,7 +49,6 @@
         fxName: 'none',
         closable: false,
         spacing_open: 0,
-        // initClosed: false,
       },
       north: {
         initClosed:            false,
@@ -45,6 +59,7 @@
       south: {
         initClosed: true,
         resizable: true,
+        slidable: true,
         spacing_closed: 14,
         spacing_open: 14,
         size: '50%',
@@ -61,13 +76,33 @@
         togglerTip_closed:    "Open library",
         resizerTip_open:    "Resize library",
       }
+    });
 
+    layoutCode = $("#code").layout({
+        center: {
+          spacing_open: 0,
+        },
+        east: {
+          size: '50%',
+          initHidden: true,
+          initClosed: true,
+          closable: true,
+          resizable: true,
+          spacing_open: 6,
+          spacing_closed: 6
+        }
     });
 
     // CREATE SPANs for pin-buttons - using a generic class as identifiers
     // $('<span><i class="fa fa-camera-retro"></i></span>').addClass('pin-button').prependTo( 'body > .ui-layout-south' );
     // BIND events to pin-buttons to make them functional
     // layout.addPinBtn( 'body > .ui-layout-south .pin-button', 'south');
+
+    function refresh_editors() {
+      editor_boo.refresh();
+      editor_js.refresh();
+    }
+
 
     var progressbar = $( "#progressbar" ),
         progressLabel = $( ".progress-label" );
@@ -101,7 +136,7 @@
         var dialog = $('#dialog-compilation');
         dialog.dialog('open');
 
-        var code = editor.getValue();
+        var code = editor_boo.getValue();
 
         $.ajax({
           url: 'http://71.19.154.9/tryboo/compile',
@@ -177,13 +212,22 @@
 
 
     // Setup the editor
-    var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+    var editor_boo = CodeMirror.fromTextArea(document.getElementById('code-boo'), {
       mode: "boo",
       theme: "solarized",
       indentUnit: 4,
       tabSize: 4,
       lineNumbers: true,
       autofocus: true
+    });
+    var editor_js = CodeMirror.fromTextArea(document.getElementById('code-js'), {
+      mode: "javascript",
+      theme: "solarized",
+      indentUnit: 4,
+      tabSize: 4,
+      lineNumbers: true,
+      autofocus: false,
+      readOnly: 'nocursor'
     });
 
 
@@ -226,7 +270,7 @@
               return;
             }
             code = code.replace(/\t/g, '    ').replace(/\r\n/g, '\n');
-            editor.setValue(code);
+            editor_boo.setValue(code);
           },
           error: function(e) {
             alert('Sorry, unable to obtain the example from github');
@@ -272,7 +316,7 @@
                   var files = $('<ul></ul>').appendTo(panel.empty());
                   $(resp.data).each(function(i, file){
                     files.append('<li><a href="#' + dir.name + '/' + file.name + '">' + 
-                      file.name.replace(/\.boo$/, '').replace(/-/g, ' ') + 
+                      file.name.replace(/\.boo$/, '').replace(/[_-]/g, ' ').replace(/(\d+)$/, '#$1') + 
                       '</a></li>');
                   });
                   accordion.accordion("refresh");
@@ -336,6 +380,8 @@
   .ui-layout-pane-north, .ui-layout-pane-east {
     padding: 0;
   }
+
+
   #toolbar {
     border-radius: 0;
   }
@@ -344,6 +390,20 @@
     color: #f1f1f1;
     background-color: #222;
   }
+
+  .ui-accordion-header {
+    font-size: 80% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .ui-accordion-content {
+    border-radius: 0 !important;
+  }
+  .ui-accordion-content {
+    font-size: 80%;
+  }
+
+
 
   .pin-button {
     position: absolute;
@@ -362,6 +422,17 @@
     width: 100%;
     height: 100%;
     margin: 0;
+  }
+
+
+  #runit {
+    background: #83a01c;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#b6d14c), color-stop(100%,#83a01c));
+    background: -moz-linear-gradient(center top, #b6d14c 0%, #83a01c 100%);
+    color: #FFFFFF;
+    font-weight: bold;
+    text-shadow: 1px 1px 0px #648018;
+    margin-right: 3em;
   }
 
   .button {
@@ -385,19 +456,6 @@
       font-size: 14px;
       color: #FFFFFF;
       font-weight: bold;
-  }
-  .button:hover {
-      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#bbda4c), color-stop(100%,#84a01d));
-      background: -moz-linear-gradient(center top, #bbda4c 0%, #84a01d 100%);
-      text-shadow: 4px 1px 5px #;
-  }
-  .button:active {
-      background: #84a01d;
-      -webkit-box-shadow: 0px 2px 5px 0px #59691b inset;
-      -moz-box-shadow: 0px 2px 5px 0px #59691b inset;
-      box-shadow: 0px 2px 5px 0px #59691b inset;
-      text-shadow: 0px 0px 2px #242e07;
-      border-color: #5c6b2f;
   }
 
   #console {
@@ -436,8 +494,9 @@
   </style>
 </head>
 <body>
-  <div class="ui-layout-center">
-      <textarea id="code">
+  <div id="code" class="ui-layout-center">
+    <div class="ui-layout-center">
+      <textarea id="code-boo">
 """
     ___            __
    / _ )___  ___  / /
@@ -465,7 +524,17 @@ def foo(boo):
     print "Remember, this is $boo not Python!"
 
 foo('BOO')
-    </textarea>
+      </textarea>
+    </div>
+    <div class="ui-layout-east">
+      <textarea id="code-js">
+// This pane will show the generated Javascript code after a
+// successful compilation with BooJs.
+//
+// Note that this pane is not editable.
+//
+      </textarea>
+    </div>
   </div>
 
   <div class="ui-layout-north">
@@ -474,7 +543,12 @@ foo('BOO')
     </div>
 
     <div id="toolbar" class="ui-widget-header ui-corner-all">
-      <button id="runit" class="button">Run it!</button>
+      <button id="runit">Run it!</button>
+
+      <span id="lang-selector" title="Switch between standard Boo and BooJs">
+        <input type="radio" id="lang-selector-boo" name="radio" checked="checked"/><label for="lang-selector-boo">Boo</label>
+        <input type="radio" id="lang-selector-boojs" name="radio" disabled="disabled" /><label for="lang-selector-boojs">BooJs</label>
+      </span>
     </div>
 
   </div>

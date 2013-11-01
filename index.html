@@ -18,6 +18,9 @@
 
   <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.css" rel="stylesheet">
 
+  <script src="https://raw.github.com/drslump/BooJS/master/src/Boo.js"></script>
+  <script src="https://raw.github.com/drslump/BooJS/master/src/Boo.debug.js"></script>
+  <script src="https://github.com/drslump/BooJS/blob/master/src/Boo.Async.js"></script>
 
   <script>
   $(document).ready(function () {
@@ -138,8 +141,9 @@
 
         var code = editor_boo.getValue();
 
+        var compiler = $("#lang-selector :radio:checked").val()
         $.ajax({
-          url: 'http://71.19.154.9/tryboo/compile',
+          url: 'http://71.19.154.9/tryboo/compile/' + compiler,
           type: 'POST',
           accepts: 'text/plain',
           contentType: 'text/plain; charset=UTF-8',
@@ -546,8 +550,8 @@ foo('BOO')
       <button id="runit">Run it!</button>
 
       <span id="lang-selector" title="Switch between standard Boo and BooJs">
-        <input type="radio" id="lang-selector-boo" name="radio" checked="checked"/><label for="lang-selector-boo">Boo</label>
-        <input type="radio" id="lang-selector-boojs" name="radio" disabled="disabled" /><label for="lang-selector-boojs">BooJs</label>
+        <input type="radio" id="lang-selector-boo" name="radio" value="boo" checked="checked"/><label for="lang-selector-boo">Boo</label>
+        <input type="radio" id="lang-selector-boojs" name="radio" value="boojs" /><label for="lang-selector-boojs">BooJs</label>
       </span>
     </div>
 

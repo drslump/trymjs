@@ -109,7 +109,7 @@ def index():
 
 @app.route('/compile/boo', methods=['POST'])
 @crossdomain(origin='*') # Only for development
-def compile():
+def compile_boo():
     # We must consume the posted data before we can return a response
     code = request.data
     if len(code) > 1024 * 10:
@@ -119,7 +119,7 @@ def compile():
 
 @app.route('/compile/boojs', methods=['POST'])
 @crossdomain(origin='*') # Only for development
-def compile():
+def compile_boojs():
     # We must consume the posted data before we can return a response
     code = request.data
     if len(code) > 1024 * 10:

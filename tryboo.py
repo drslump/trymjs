@@ -78,25 +78,12 @@ def crossdomain(origin=None, methods=None, headers=None,
 # ------
 
 
-app = Flask(__name__)
-app.debug = True
 
-@app.route('/')
-def index():
-    return "<span style='color:red'>I am app 1</span>"
-
-@app.route('/compile', methods=['POST'])
-@crossdomain(origin='*') # Only for development
-def compile():
-    # We must consume the posted data before we can return a response
-    code = request.data
-    if len(code) > 1024 * 10:
-        raise Exception('Code size exceeds the configured limit')
-
+def compile(sh, code):
     pwd = os.path.dirname(__file__)
     box = Sandbox('/var/run/sandboxd.socket')
     box.tar.add(pwd + '/timeout', arcname='timeout')
-    box.tar.add(pwd + '/wrapper.sh', arcname='init')
+    box.tar.add(pwd + '/' + sh, arcname='init')
 
     # Wrap the code in a file-like object for tar
     import StringIO
@@ -111,4 +98,32 @@ def compile():
 
     return '\n'.join(box.output)
 
+
+
+app = Flask(__name__)
+app.debug = True
+
+@app.route('/')
+def index():
+    return "<span style='color:red'>I am app 1</span>"
+
+@app.route('/compile/boo', methods=['POST'])
+@crossdomain(origin='*') # Only for development
+def compile():
+    # We must consume the posted data before we can return a response
+    code = request.data
+    if len(code) > 1024 * 10:
+        raise Exception('Code size exceeds the configured limit')
+
+    return compile('boo.sh', code)
+
+@app.route('/compile/boojs', methods=['POST'])
+@crossdomain(origin='*') # Only for development
+def compile():
+    # We must consume the posted data before we can return a response
+    code = request.data
+    if len(code) > 1024 * 10:
+        raise Exception('Code size exceeds the configured limit')
+
+    return compile('boojs.sh', code)
 

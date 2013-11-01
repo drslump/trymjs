@@ -24,8 +24,3 @@ nice -n $NICE_LEVEL \
 ./timeout -t $LIMIT_CPU -m $LIMIT_MEM \
 mono $MONO_OPTS /opt/boo-alpha/booi.exe program.boo
 echo "EXITCODE: $?"
-
-#for i in {0..9}; do
-#    echo "waiting to see if the process is terminated: $i"
-#    sleep 1
-#done

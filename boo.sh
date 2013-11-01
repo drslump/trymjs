@@ -22,5 +22,5 @@ echo "---------------"
 
 nice -n $NICE_LEVEL \
 ./timeout -t $LIMIT_CPU -m $LIMIT_MEM \
-mono $MONO_OPTS /opt/boo-alpha/booi.exe program.boo
+LANG=en_US.UTF-8 mono $MONO_OPTS /opt/boo-alpha/booi.exe program.boo
 echo "EXITCODE: $?"

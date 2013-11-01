@@ -22,7 +22,7 @@ echo "---------------"
 
 nice -n $NICE_LEVEL \
 ./timeout -t $LIMIT_CPU -m $LIMIT_MEM \
-mono $MONO_OPTS /opt/boojs/boojs.exe -debug+ -embedasm- -sourcemap:out.map -o:program.js program.boo
+LANG=en_US.UTF-8 mono $MONO_OPTS /opt/boojs/boojs.exe -debug+ -embedasm- -sourcemap:out.map -o:program.js program.boo
 
 status=$?
 
@@ -32,4 +32,4 @@ if [ $status -eq 0 ]; then
 fi
 echo "})]>"
 
-echo "EXITCODE: $?"
+echo "EXITCODE: $status"

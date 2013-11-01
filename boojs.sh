@@ -24,8 +24,10 @@ nice -n $NICE_LEVEL \
 ./timeout -t $LIMIT_CPU -m $LIMIT_MEM \
 mono $MONO_OPTS /opt/boojs/boojs.exe -debug+ -embedasm- -sourcemap:out.map -o:program.js program.boo
 
+status=$?
+
 echo "<[({"
-if [ $? -ne 0 ]; then
+if [ $status -eq 0 ]; then
     cat program.js
 fi
 echo "})]>"

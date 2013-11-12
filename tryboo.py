@@ -8,7 +8,7 @@ import os
 import tarfile
 import StringIO
 
-from .utils import crossdomain
+from utils import crossdomain
 
 
 SANDBOXD_SOCKET = '/var/run/sandboxd.socket'
@@ -73,3 +73,4 @@ def compile_boojs():
         raise Exception('Code size exceeds the configured limit')
 
     return compile('boojs.sh', code)
+

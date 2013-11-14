@@ -50,7 +50,7 @@ def compile(sh, code):
 
 
 app = Flask(__name__)
-app.debug = True
+app.debug = False
 
 
 @app.route('/compile/boo', methods=['POST'])

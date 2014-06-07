@@ -261,11 +261,11 @@
       var hash = window.location.hash;
       hash = hash.replace(/^#/, '');
       if (hash.length) {
-        if (!/\.boo$/.test(hash))
-          hash += '.boo';
+        if (!/\.mjs$/.test(hash))
+          hash += '.mjs';
 
         $.ajax({
-          url: 'https://api.github.com/repos/massimiliano-mantione/metascript/contents/test/functional' + hash,
+          url: 'https://api.github.com/repos/massimiliano-mantione/metascript/contents/test' + hash,
           dataType: 'jsonp',
           success: function(resp){
             try {

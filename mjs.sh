@@ -1,25 +1,23 @@
 #!/bin/bash
 
-function json(){ 
-  python -c 'import json,sys; print json.dumps(sys.stdin.read())'; 
+function json(){
+  python -c 'import json,sys; print json.dumps(sys.stdin.read())';
 }
+
+export TMPDIR=~/tmp
+mkdir $TMPDIR
 
 export PATH="/usr/local/bin:$PATH"
 export LANG=en_US.UTF-8
 
-# Alias the compiler to the sandbox home
-ln -s ~/node_modules /var/www/trymjs/node_modules
-
 NODE=/usr/local/bin/node
 NODE_OPTS=
-MJS="$NODE $NODE_OPTS node_modules/meta-script/bin/mjs"
+MJS="$NODE $NODE_OPTS /opt/metascript/bin/mjs"
 MJS_OPTS=
 
 # Print out mono and Boo versions
 NODE_VERSION=`$NODE --version | head -1`
 MJS_VERSION=`$MJS --version | head -1`
-echo "Metascript $MJS_VERSION -- Node $NODE_VERSION"
-echo "-----------------------------------------"
 
 NICE_LEVEL=15                   # Process priority (from 0 to 20, 0 is highest)
 TIME_LIMIT=4s                   # Timeout for the process
@@ -42,5 +40,5 @@ echo " \"js\": $(cat program.js | json),"
 fi
 echo " \"node-version\": \"$NODE_VERSION\","
 echo " \"mjs-version\": \"$MJS_VERSION\","
-echo " \"time\": $((time_stop - time_start))" 
+echo " \"time\": $((time_stop - time_start))"
 echo "}"

@@ -37,7 +37,7 @@ echo " \"status\": $status,"
 if [ $status -eq 0 ]; then
 echo " \"js\": $(cat program.js | json),"
 fi
-echo " \"node-version\": \"$NODE_VERSION\","
-echo " \"mjs-version\": \"$MJS_VERSION\","
+echo " \"node-version\": \"$((NODE_VERSION | json))\","
+echo " \"mjs-version\": \"$((MJS_VERSION | json))\","
 echo " \"time\": $((time_stop - time_start))" 
 echo "}"

@@ -150,7 +150,8 @@
 
             try {
               var json = JSON.parse(data);
-            } catch (e) {              
+            } catch (e) {
+              data = data.replace(/\n\n/g, '\n');
               $('#console').append(
                 '<hr/>' + 
                 data.replace('<', '&lt;').replace('&', '&amp;') +

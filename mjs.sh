@@ -29,9 +29,8 @@ time_start=`date +%s%6N`
 nice -n $NICE_LEVEL \
   timeout $TIME_LIMIT \
   $MJS $MJS_OPTS -o program.js program.mjs
-time_stop=`date +%s%6N`
-
 status=$?
+time_stop=`date +%s%6N`
 
 if [ $status -eq 0 ]; then
   echo "{"

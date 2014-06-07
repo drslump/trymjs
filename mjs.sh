@@ -24,11 +24,11 @@ TIME_LIMIT=4s                   # Timeout for the process
 VMEM_LIMIT=$(( 768 * 1024 ))    # Virtual Memory limit in kilobytes
 
 ulimit -v $VMEM_LIMIT
-time_start=`date +%s%N`
+time_start=`date +%s%6N`
 nice -n $NICE_LEVEL \
   timeout $TIME_LIMIT \
   $MJS $MJS_OPTS -o program.js program.mjs
-time_stop=`date +%s%N`
+time_stop=`date +%s%6N`
 
 status=$?
 

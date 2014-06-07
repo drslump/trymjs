@@ -294,7 +294,7 @@
 
     // Get all examples
     $.ajax({
-      url: 'https://api.github.com/repos/massimiliano-mantione/metascript/contents/test/functional',
+      url: 'https://api.github.com/repos/massimiliano-mantione/metascript/contents/test',
       dataType: 'jsonp',
       success: function(resp){
         $(resp.data).each(function(i, dir){
@@ -322,7 +322,7 @@
                   var files = $('<ul></ul>').appendTo(panel.empty());
                   $(resp.data).each(function(i, file){
                     files.append('<li><a href="#' + dir.name + '/' + file.name + '">' + 
-                      file.name.replace(/\.boo$/, '').replace(/[_-]/g, ' ').replace(/(\d+)$/, '#$1') + 
+                      file.name.replace(/\.mjs$/, '').replace(/[_-]/g, ' ').replace(/(\d+)$/, '#$1') + 
                       '</a></li>');
                   });
                   accordion.accordion("refresh");

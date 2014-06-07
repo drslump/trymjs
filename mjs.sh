@@ -7,6 +7,9 @@ function json(){
 export PATH="/usr/local/bin:$PATH"
 export LANG=en_US.UTF-8
 
+# Alias the compiler to the sandbox home
+ln -s ~/node_modules /var/www/trymjs/node_modules
+
 NODE=/usr/local/bin/node
 NODE_OPTS=
 MJS="$NODE $NODE_OPTS node_modules/meta-script/bin/mjs"

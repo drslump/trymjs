@@ -157,6 +157,13 @@
                 '<br/>' +
                 '<span class="error">Damn it! something went wrong, check for errors above :-(</span>'
               );
+
+              // Keep the viewport at the bottom
+              var south = $('.ui-layout-south');
+              south.animate({scrollTop: south.prop('scrollHeight')});
+              layout.open('south');
+              dialog.dialog('close');
+
               return;
             }
 

@@ -50,7 +50,7 @@ CodeMirror.defineMode("metascript", function(conf, parserConf) {
                    || lt == 'const'
                    || lt == 'fun'
                    || lt == '#keepmacro'
-                   || lt.startsWith('#def')));
+                   || /^#def/.test(lt)));
     }
 
     function orIdentifier(stream, state, pattern, style) {

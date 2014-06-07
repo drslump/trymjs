@@ -168,7 +168,6 @@
               south.animate({scrollTop: south.prop('scrollHeight')});
               layout.open('south');
               dialog.dialog('close');
-
               return;
             }
 
@@ -266,7 +265,7 @@
           hash += '.boo';
 
         $.ajax({
-          url: 'https://api.github.com/repos/bamboo/boo/contents/tests/testcases/integration/' + hash,
+          url: 'https://api.github.com/repos/massimiliano-mantione/metascript/contents/test/functional' + hash,
           dataType: 'jsonp',
           success: function(resp){
             try {
@@ -295,7 +294,7 @@
 
     // Get all examples
     $.ajax({
-      url: 'https://api.github.com/repos/bamboo/boo/contents/tests/testcases/integration',
+      url: 'https://api.github.com/repos/massimiliano-mantione/metascript/contents/test/functional',
       dataType: 'jsonp',
       success: function(resp){
         $(resp.data).each(function(i, dir){

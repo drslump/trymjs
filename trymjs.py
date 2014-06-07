@@ -55,7 +55,8 @@ app.debug = False
 
 @app.route('/compile/mjs', methods=['POST'])
 @crossdomain(origin='*') # Only for development
-def compile_boo():
+def compile_mjs():
+    return 'foo'
     # We must consume the posted data before we can return a response
     code = request.data
     if len(code) > 1024 * 10:

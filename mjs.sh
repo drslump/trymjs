@@ -19,7 +19,7 @@ echo "-----------------------------------------"
 
 NICE_LEVEL=15                   # Process priority (from 0 to 20, 0 is highest)
 TIME_LIMIT=4s                   # Timeout for the process
-VMEM_LIMIT=$(( 32 * 1024 ))     # Virtual Memory limit in kilobytes
+VMEM_LIMIT=$(( 64 * 1024 ))     # Virtual Memory limit in kilobytes
 
 ulimit -v $VMEM_LIMIT
 nice -n $NICE_LEVEL \

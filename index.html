@@ -152,7 +152,7 @@
               // Ignore anything previous to the result
               var json = data.split(/^--json--$/m)[1];
               json = JSON.parse(json);
-              json.js = json.js.replace(/^\/\/\\s?#.*/m, '');
+              json.js = json.js.replace(/^\/\/\s?#.*/m, '');
             } catch (e) {
               console.log(e);
               data = data.replace(/\n\n/g, '\n');

@@ -96,7 +96,10 @@
     $(document).keyup(function(e) {
       if (e.keyCode == 27) {  // esc
         layout.slideToggle('south');
-      } else if ((e.metaKey || e.ctrlKey) && e.keyCode == 13) {
+      }
+    });
+    $(document).keydown(function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.keyCode == 13) {
         $('#runit').click();
       }
     });
@@ -559,8 +562,11 @@ credits '==============='
 // console panel below.
 //
 // You can browse some examples by opening the panel
-// at the right. To toggle the console panel use the
-// Esc key.
+// at the right.
+//
+// To run the code click on the button at the top left
+// corner or use Command-Enter keyboard shortcut. To
+// toggle the console panel use the Esc key.
       </textarea>
     </div>
   </div>

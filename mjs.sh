@@ -33,6 +33,7 @@ status=$?
 time_stop=`date +%s%6N`
 
 if [ $status -eq 0 ]; then
+  echo "----------------------------------"
   echo "{"
   echo " \"status\": $status,"
   echo " \"js\": $(cat program.js | json),"

@@ -1,46 +1,67 @@
-// Boo mode based on the Python one
-CodeMirror.defineMode("boo", function(conf, parserConf) {
+// From MightTable by Rodrigo B. de Oliveira (Bamboo)
+// Based on python mode by Chris Granger
+
+CodeMirror.defineMode("metascript", function(conf, parserConf) {
     var ERRORCLASS = 'error';
 
-    function wordRegexp(words) {
-        return new RegExp("^((" + words.join(")|(") + "))\\b");
+    function orRegexp(patterns) {
+      return "(" + patterns.join(")|(") + ")";
     }
 
-    var singleOperators = parserConf.singleOperators || new RegExp("^[\\+\\-\\*/%&|\\^~<>!]");
-    var singleDelimiters = parserConf.singleDelimiters || new RegExp('^[\\(\\)\\[\\]\\{\\}@,:`=;\\.]');
-    var doubleOperators = parserConf.doubleOperators || new RegExp("^((==)|(!=)|(<=)|(>=)|=~|(<>)|(<<)|(>>)|(//)|(\\*\\*))");
+    function wordRegexp(words, specialWords) {
+        var wordsPattern = "(" + orRegexp(words) + ")\\b";
+        return specialWords
+          ? new RegExp("^" + orRegexp([orRegexp(specialWords), wordsPattern]))
+          : new RegExp("^" + wordsPattern);
+    }
+
+
+    var unquoteOperators = new RegExp("^((~`)|`)");
+    var operatorSet = "-\\+\\*/%&|\\^~=<>!";
+    var operators = parserConf.operators || new RegExp('^[' + operatorSet + '][' + operatorSet + '\\.]*');
+    var singleDelimiters = parserConf.singleDelimiters || new RegExp('^[\\(\\)\\[\\]\\{\\}@,:=;\\.]');
     var doubleDelimiters = parserConf.doubleDelimiters || new RegExp("^((\\+=)|(\\-=)|(\\*=)|(%=)|(/=)|(&=)|(\\|=)|(\\^=))");
     var tripleDelimiters = parserConf.tripleDelimiters || new RegExp("^((//=)|(>>=)|(<<=)|(\\*\\*=))");
-    var identifiers = parserConf.identifiers|| new RegExp("^[_A-Za-z][_A-Za-z0-9]*");
+    var identifiers = parserConf.identifiers || new RegExp("^[\\\\]?[#_A-Za-z\\-][_A-Za-z0-9>\\-]*[!?]?");
+    var identifierSuffix = new RegExp("^([!?]|([_A-Za-z0-9\\->]+[!?]?))");
 
-    var wordOperators = wordRegexp(['and', 'or', 'not', 'is', 'in', 'isa', 'of']);
-    var commonkeywords = ['as', 'assert', 'break', 'class', 'continue',
-                          'def', 'elif', 'else', 'except', 'ensure',
-                          'for', 'from', 'if', 'import',
-                          'pass', 'raise', 'return', 'struct', 'public', 'protected', 'private', 'readonly', 'static',
-                          'try', 'while', 'using', 'yield'];
-    var commonBuiltins = ['join', 'array', 'callable', 'map', 'print', 'macro', 'range'];
-    var commonTypes = ['void', 'duck', 'object', 'int', 'float', 'double', 'string', 'char', 'regex', 'List'];
+    var wordOperators = wordRegexp(['typeof', 'instanceof']);
+    var specialKeywords = ['next\\!', 'end\\!',
+                          'do\\!', 'give\\!'];
+    var commonkeywords = ['var', 'const', 'try', 'catch', 'throw', 'finally',
+                          'if', 'else', 'loop', 'do', 'return', 'new',
+                          'fun', 'delete', 'this'];
+    var commonBuiltins = ['require', '#external',
+                          'Object', 'Array', 'String',
+                          'Error', 'Math', 'JSON', 'RegExp', 'void'];
+    var stringPrefixes = new RegExp("^('{3}|\"{3}|['\"])");
+    keywords = wordRegexp(commonkeywords, specialKeywords);
+    builtins = wordRegexp(commonBuiltins);
 
-    if(parserConf.extra_keywords){
-        commonkeywords = commonkeywords.concat(parserConf.extra_keywords);
-    }
-    if(parserConf.extra_builtins){
-        commonBuiltins = commonBuiltins.concat(parserConf.extra_builtins);
-    }
-    if(parserConf.extra_types){
-        commonTypes = commonTypes.concat(parserConf.extra_types);
-    }
- 
-    var keywords = wordRegexp(commonkeywords);
-    var builtins = wordRegexp(commonBuiltins);
-    var types = wordRegexp(commonTypes);
-    var stringPrefixes = new RegExp("^(@?('{3}|\"{3}|['\"]))", "i");
-
+    var atoms = wordRegexp(['true', 'false', 'null', 'undefined', 'NaN']);
 
     var indentInfo = null;
 
     // tokenizers
+    function isDef(stream, state) {
+      var lt = state.lastToken;
+      return stream.peek() == ':'
+        || (lt && (lt == 'var'
+                   || lt == 'const'
+                   || lt == 'fun'
+                   || lt == '#keepmacro'
+                   || lt.startsWith('#def')));
+    }
+
+    function orIdentifier(stream, state, pattern, style) {
+      if (stream.match(pattern)) {
+        if (stream.match(identifierSuffix))
+          return isDef(stream, state) ? 'def' : 'identifier';
+        return style;
+      }
+      return undefined;
+    }
+
     function tokenBase(stream, state) {
         // Handle scope changes
         if (stream.sol()) {
@@ -66,7 +87,7 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
         var ch = stream.peek();
 
         // Handle Comments
-        if (ch === '#') {
+        if (ch === ';') {
             stream.skipToEnd();
             return 'comment';
         }
@@ -117,43 +138,57 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
         if (stream.match(tripleDelimiters) || stream.match(doubleDelimiters)) {
             return null;
         }
-        if (stream.match(doubleOperators)
-            || stream.match(singleOperators)
-            || stream.match(wordOperators)) {
-            return 'operator';
-        }
+
+        if (stream.match(unquoteOperators))
+             return 'meta';
+
         if (stream.match(singleDelimiters)) {
             return null;
         }
 
-        if (stream.match(keywords)) {
-            return 'keyword';
+        var keywordOrIdentifier = orIdentifier(stream, state, keywords, 'keyword');
+        if (keywordOrIdentifier) {
+          return keywordOrIdentifier;
         }
 
-        if (stream.match(builtins)) {
-            return 'builtin';
+        var builtinOrIdentifier = orIdentifier(stream, state, builtins, 'builtin');
+        if (builtinOrIdentifier) {
+          return builtinOrIdentifier;
         }
 
-        if (stream.match(types)) {
-            return 'type';
+        var atomOrIdentifier = orIdentifier(stream, state, atoms, 'atom');
+        if (atomOrIdentifier) {
+          return atomOrIdentifier;
         }
 
+        var operatorOrIdentifier = orIdentifier(stream, state, wordOperators, 'operator');
+        if (operatorOrIdentifier) {
+          return operatorOrIdentifier;
+        }
+
+        var startingChar = stream.peek();
         if (stream.match(identifiers)) {
-            if (state.lastToken == 'def' || state.lastToken == 'class') {
-                return 'def';
-            }
-            return 'variable';
+          if (stream.current() == '->')
+            return 'operator';
+          if (isDef(stream, state))
+            return 'def';
+          return (startingChar == '#' || startingChar == '\\')
+            ? 'meta'
+            : 'identifier';
         }
+
+        if (stream.match(operators)) {
+            return 'operator';
+        }
+
 
         // Handle non-detected items
         stream.next();
         return ERRORCLASS;
     }
 
+
     function tokenStringFactory(delimiter) {
-        while ('rub'.indexOf(delimiter.charAt(0).toLowerCase()) >= 0) {
-            delimiter = delimiter.substr(1);
-        }
         var singleline = delimiter.length == 1;
         var OUTCLASS = 'string';
 
@@ -186,15 +221,15 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
     }
 
     function indent(stream, state, type) {
-        type = type || 'boo';
+        type = type || 'py';
         var indentUnit = 0;
-        if (type === 'boo') {
-            if (state.scopes[0].type !== 'boo') {
+        if (type === 'py') {
+            if (state.scopes[0].type !== 'py') {
                 state.scopes[0].offset = stream.indentation();
                 return;
             }
             for (var i = 0; i < state.scopes.length; ++i) {
-                if (state.scopes[i].type === 'boo') {
+                if (state.scopes[i].type === 'py') {
                     indentUnit = state.scopes[i].offset + conf.indentUnit;
                     break;
                 }
@@ -209,9 +244,9 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
     }
 
     function dedent(stream, state, type) {
-        type = type || 'boo';
+        type = type || 'py';
         if (state.scopes.length == 1) return;
-        if (state.scopes[0].type === 'boo') {
+        if (state.scopes[0].type === 'py') {
             var _indent = stream.indentation();
             var _indent_index = -1;
             for (var i = 0; i < state.scopes.length; ++i) {
@@ -228,7 +263,7 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
             }
             return false;
         } else {
-            if (type === 'boo') {
+            if (type === 'py') {
                 state.scopes[0].offset = stream.indentation();
                 return false;
             } else {
@@ -257,26 +292,23 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
             return style;
         }
 
-        // Handle verbatim idents
-        if (current === '@') {
-            return stream.match(identifiers, false) ? 'meta' : ERRORCLASS;
-        }
-
         if ((style === 'variable' || style === 'builtin')
             && state.lastStyle === 'meta') {
-            style = 'variable';
+            style = 'meta';
         }
 
         // Handle scope changes.
         if (current === 'pass' || current === 'return') {
             state.dedent += 1;
         }
-        if ((current === ':' && state.scopes[0].type == 'boo')
+        if (current === 'lambda') state.lambda = true;
+        if ((current === ':' && !state.lambda && state.scopes[0].type == 'py')
             || indentInfo === 'indent') {
             indent(stream, state);
         }
         var delimiter_index = '[({'.indexOf(current);
         if (delimiter_index !== -1) {
+            style = 'bracket';
             indent(stream, state, '])}'.slice(delimiter_index, delimiter_index+1));
         }
         if (indentInfo === 'dedent') {
@@ -289,8 +321,9 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
             if (dedent(stream, state, current)) {
                 return ERRORCLASS;
             }
+          style = 'bracket';
         }
-        if (state.dedent > 0 && stream.eol() && state.scopes[0].type == 'boo') {
+        if (state.dedent > 0 && stream.eol() && state.scopes[0].type == 'py') {
             if (state.scopes.length > 1) state.scopes.shift();
             state.dedent -= 1;
         }
@@ -302,7 +335,7 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
         startState: function(basecolumn) {
             return {
               tokenize: tokenBase,
-              scopes: [{offset:basecolumn || 0, type:'boo'}],
+              scopes: [{offset:basecolumn || 0, type:'py'}],
               lastStyle: null,
               lastToken: null,
               lambda: false,
@@ -334,12 +367,10 @@ CodeMirror.defineMode("boo", function(conf, parserConf) {
             return state.scopes[0].offset;
         },
 
-        lineComment: "#",
+        lineComment: ";",
         fold: "indent"
     };
     return external;
 });
 
-CodeMirror.defineMIME("text/x-boo", "boo");
-
-
+CodeMirror.defineMIME("text/x-metascript", "metascript");

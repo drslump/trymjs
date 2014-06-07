@@ -1,29 +1,30 @@
 #!/bin/bash
 
 # Booi needs to output the assembly somewhere
-export TMPDIR=~/tmp
-mkdir $TMPDIR
+#export TMPDIR=~/tmp
+#mkdir $TMPDIR
 
-export PATH="/opt/mono/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
 export LANG=en_US.UTF-8
-export MONO_OPTS='--gc=boehm'
 
-BOOJS=/opt/boojs/boojs.exe
+NODE_OPTS=
+MJS=node_modules/meta-script/bin/mjs
+MJS_OPTS=
 
 # Print out mono and Boo versions
-MONO_VERSION=`mono $MONO_OPTS --version | head -1`
-BOOJS_VERSION=0.0.1
-echo "$BOOJS_VERSION -- $MONO_VERSION"
-echo "---------------"
+NODE_VERSION=`node --version | head -1`
+MJS_VERSION=`$MJS --version | head -1`
+echo "Metascript $MJS_VERSION -- Node $NODE_VERSION"
+echo "-----------------------------------------"
 
 NICE_LEVEL=15                   # Process priority (from 0 to 20, 0 is highest)
 TIME_LIMIT=4s                   # Timeout for the process
-VMEM_LIMIT=$(( 75 * 1024 ))     # Virtual Memory limit in kilobytes
+VMEM_LIMIT=$(( 32 * 1024 ))     # Virtual Memory limit in kilobytes
 
 ulimit -v $VMEM_LIMIT
 nice -n $NICE_LEVEL \
   timeout $TIME_LIMIT \
-  mono $MONO_OPTS $BOOJS -debug+ -embedasm- -sourcemap:out.map -o:program.js program.boo
+  node $NODE_OPTS $MJS -o program.js program.mjs
 
 status=$?
 

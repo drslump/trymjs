@@ -13,7 +13,7 @@ export LANG=en_US.UTF-8
 NODE=/usr/local/bin/node
 NODE_OPTS=
 MJS="$NODE $NODE_OPTS /opt/metascript/bin/mjs"
-MJS_OPTS=
+MJS_OPTS="--no-color"
 
 # Print out mono and Boo versions
 NODE_VERSION=`$NODE --version | head -1`
@@ -33,12 +33,12 @@ time_stop=`date +%s%6N`
 
 status=$?
 
-echo "{"
-echo " \"status\": $status,"
 if [ $status -eq 0 ]; then
-echo " \"js\": $(cat program.js | json),"
+  echo "{"
+  echo " \"status\": $status,"
+  echo " \"js\": $(cat program.js | json),"
+  echo " \"node-version\": \"$NODE_VERSION\","
+  echo " \"mjs-version\": \"$MJS_VERSION\","
+  echo " \"time\": $((time_stop - time_start))"
+  echo "}"
 fi
-echo " \"node-version\": \"$NODE_VERSION\","
-echo " \"mjs-version\": \"$MJS_VERSION\","
-echo " \"time\": $((time_stop - time_start))"
-echo "}"

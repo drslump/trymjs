@@ -148,113 +148,50 @@
               return;
             }
 
-            var stdout = [];
-            var has_errors = false;
-
-            data = data.replace(/^>\s\s?/gm, '');
-
-            // HACK to support boojs in a dirty way
-            data = data.replace(/<\[\(\{((.|[\r\n])*)\}\)\]>/, function(m, code) {
-              // HACK: code comes with empty lines
-              var lines = code.replace(/^\r?\n/, '').split(/\n/);
-              code = '';
-              for (var i=1; i<lines.length; i+=2) {
-                code += lines[i] + '\n';
-              }
-
-              // Set the reported code in the js panel
-              editor_js.setValue(code);
-              refresh_editors();
-
-              var result = '';
-
-              // Mock the output method
-              var orig_print = Boo.print;
-              Boo.print = function(args) { result += args.join(' ') + '\n'; };
-
-              // Mock setTimeout to force define/require to work synchronously
-              var orig_setTimeout = setTimeout;
-              setTimeout = function(fn) { fn(); };
-
-              // Extract the sourcemap statement so we can register it first
-              // since we have forced the module system to work synchronously
-              // TODO: Doesn't work anyway, we can catch errors when doing injection
-              var m = code.match(/Boo\.sourcemap\((.*)\);/);
-              if (m && m[1]) {
-                var map = JSON.parse(m[1]);
-                map.file = '<anonymous>';
-                console.log('SourceMap:', map);
-                Boo.sourcemap(map);
-              }
-
-              // Mock warn method used by boo-debug to print mapped errors
-              var mapped_error;
-              var orig_warn;
-              console.warn = function(msg) { mapped_error = msg; }
-
-              // Execute
-              try {
-                eval(code);
-              } catch (e) {
-                has_errors = true;
-                console.error(e);
-                if (mapped_error)
-                  result += mapped_error + '\n';
-                else
-                  result += (e.stack || e) + '\n';
-              } finally {
-                Boo.print = orig_print;
-                setTimeout = orig_setTimeout
-                console.warn = orig_warn;
-              }
-
-              return result;
-            });
-
-
-            var lines = data.split(/\r?\n/);
-            $(lines).each(function(i, ln){
-              if (/^-{3,}$/.test(ln)) {
-                stdout.push('<hr />');
-                return
-              }
-
-              if (/^<time\s+name=/.test(ln)) {
-                return;
-              }
-              if (/^EXITCODE:\s\d+/.test(ln)) {
-                return;
-              }
-
-              ln = ln.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-              if (!ln.length) return;
-
-              if (/BCE\d+/.test(ln)) {
-                has_errors = true;
-                ln = '<span class="error">' + ln + '</span>';
-              } else if (/BCW\d+/.test(ln)) {
-                ln = '<span class="warning">' + ln + '</span>';
-              }
-
-              stdout.push(ln);
-            });
-
-            if (has_errors) {
-              stdout.push('<span class="error">Damn it! something went wrong, check for errors above :-(</span>');
-            } else {
-              stdout.push('<span class="info">Execution successful, congrats!</span>');
+            try {
+              var json = JSON.parse(data);
+            } catch (e) {              
+              $('#console').append(
+                '<hr/>' + 
+                data.replace('<', '&lt;').replace('&', '&amp;') +
+                '<br/>' +
+                '<span class="error">Damn it! something went wrong, check for errors above :-(</span>'
+              );
+              return;
             }
 
-            var output = $('#console');
+            // Set the reported code in the js panel
+            editor_js.setValue(json.js);
+            refresh_editors();
 
-            output.append('<hr/>' + stdout.join('\n'));
 
-            // Keep the viewport at the bottom
-            var south = $('.ui-layout-south');
-            south.animate({scrollTop: south.prop('scrollHeight')});
-            
-            layout.open('south');
-            dialog.dialog('close');  
+            // Mock the output method
+
+            var mockedConsole = {
+              output: '',
+              log: function() {
+                var args = Array.prototype.slice.call(arguments, 0);
+                this.output += args.join(' ') + '\n';
+              }
+            };
+
+            // Execute
+            try {
+              (new Function('console', json.js))(mockedConsole);
+            } catch (e) {
+              mockedConsole.log((e.stack || e) + '\n');
+              $('#console').append(
+                '<hr/>' +
+                mockedConsole.output.replace('<', '&lt;').replace('&', '&amp;').replace('\n', '<br/>')
+              );
+              throw e;
+            } finally {
+              // Keep the viewport at the bottom
+              var south = $('.ui-layout-south');
+              south.animate({scrollTop: south.prop('scrollHeight')});
+              layout.open('south');
+              dialog.dialog('close');  
+            }
           },
           error: function(error) {
             var stdout = $('#console');

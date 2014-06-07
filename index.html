@@ -26,11 +26,13 @@
     $('#lang-selector').tooltip();
     $('#lang-selector').buttonset();
     
+    /*
     $('#lang-selector-boojs').click(function(){
       layoutCode.show('east', false);
       layoutCode.open('east');
       refresh_editors();
     });
+*/
 
     var layout = $('body').layout({ 
       defaults: {
@@ -97,7 +99,7 @@
     // layout.addPinBtn( 'body > .ui-layout-south .pin-button', 'south');
 
     function refresh_editors() {
-      editor_boo.refresh();
+      editor_mjs.refresh();
       editor_js.refresh();
     }
 
@@ -131,11 +133,10 @@
         var dialog = $('#dialog-compilation');
         dialog.dialog('open');
 
-        var code = editor_boo.getValue();
+        var code = editor_mjs.getValue();
 
-        var compiler = $("#lang-selector :radio:checked").val()
         $.ajax({
-          url: 'http://tryboo.pollinimini.net/compile/' + compiler,
+          url: 'http://trymjs.pollinimini.net/compile/mjs',
           type: 'POST',
           accepts: 'text/plain',
           contentType: 'text/plain; charset=UTF-8',
@@ -268,8 +269,8 @@
 
 
     // Setup the editor
-    var editor_boo = CodeMirror.fromTextArea(document.getElementById('code-boo'), {
-      mode: "boo",
+    var editor_mjs = CodeMirror.fromTextArea(document.getElementById('code-mjs'), {
+      mode: "mjs",
       theme: "solarized",
       indentUnit: 4,
       tabSize: 4,
@@ -559,7 +560,7 @@
 <body>
   <div id="code" class="ui-layout-center">
     <div class="ui-layout-center">
-      <textarea id="code-boo">
+      <textarea id="code-mjs"><![CDATA
 """
              _                      _       _     _ 
   /\/\   ___| |_ __ _ ___  ___ _ __(_)_ __ | |_  / \
@@ -579,14 +580,14 @@ directory, however the space available is just a few
 kilobytes and the contents are destroyed after each run.
 """
 
-var credits = line-sep -> 
+var credits = line-sep ->
   console.log "Credits"
   console.log line-sep
   console.log "Metascript compiler by Massimiliano Mantione"
   console.log "Online compiler by Iván -DrSlump- Montes"
 
 credits '==============='
-      </textarea>
+      ]]></textarea>
     </div>
     <div class="ui-layout-east">
       <textarea id="code-js">

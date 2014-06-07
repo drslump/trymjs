@@ -39,7 +39,7 @@ def compile(sh, code):
 
     # Wrap the code in a file-like object for tar
     strio = StringIO.StringIO(code)
-    codeinfo = tarfile.TarInfo('program.boo')
+    codeinfo = tarfile.TarInfo('program.mjs')
     codeinfo.size = len(strio.buf)
     box.tar.addfile(tarinfo=codeinfo, fileobj=strio)
 
@@ -53,7 +53,7 @@ app = Flask(__name__)
 app.debug = False
 
 
-@app.route('/compile/boo', methods=['POST'])
+@app.route('/compile/mjs', methods=['POST'])
 @crossdomain(origin='*') # Only for development
 def compile_boo():
     # We must consume the posted data before we can return a response
@@ -61,16 +61,4 @@ def compile_boo():
     if len(code) > 1024 * 10:
         raise Exception('Code size exceeds the configured limit')
 
-    return compile('boo.sh', code)
-
-
-@app.route('/compile/boojs', methods=['POST'])
-@crossdomain(origin='*') # Only for development
-def compile_boojs():
-    # We must consume the posted data before we can return a response
-    code = request.data
-    if len(code) > 1024 * 10:
-        raise Exception('Code size exceeds the configured limit')
-
-    return compile('boojs.sh', code)
-
+    return compile('mjs.sh', code)

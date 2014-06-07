@@ -7,7 +7,7 @@
   
   <script type="text/javascript" src="http://cdn.jsdelivr.net/codemirror/3.14.0/codemirror.min.js"></script>
   <script type="text/javascript" src="http://cdn.jsdelivr.net/codemirror/3.14.0/mode/javascript/javascript.js"></script>
-  <script type="text/javascript" src="boo-mode.js"></script>
+  <script type="text/javascript" src="mjs-mode.js"></script>
 
   <script src="http://codeorigin.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="http://codeorigin.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
@@ -17,10 +17,6 @@
   <link type="text/css" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/jquery-layout/1.3.0-rc-30.79/layout-default.min.css" />
 
   <link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.1/css/font-awesome.css" rel="stylesheet">
-
-  <script src="https://rawgithub.com/drslump/BooJS/master/src/Boo.js?v1"></script>
-  <script src="https://rawgithub.com/drslump/BooJS/master/src/Boo.debug.js?v1"></script>
-  <script src="https://rawgithub.com/drslump/BooJS/master/src/Boo.Async.js?v1"></script>
 
   <script>
   $(document).ready(function () {
@@ -35,11 +31,6 @@
       layoutCode.open('east');
       refresh_editors();
     });
-    $('#lang-selector-boo').click(function(){
-      layoutCode.hide('east');
-      refresh_editors();
-    });
-
 
     var layout = $('body').layout({ 
       defaults: {
@@ -88,8 +79,8 @@
         },
         east: {
           size: '50%',
-          initHidden: true,
-          initClosed: true,
+          initHidden: false,
+          initClosed: false,
           closable: true,
           resizable: true,
           spacing_open: 6,
@@ -570,32 +561,34 @@
     <div class="ui-layout-center">
       <textarea id="code-boo">
 """
-    ___            __
-   / _ )___  ___  / /
-  / _  / _ \/ _ \/_/ 
- /____/\___/\___(_)  
-                    
+                 __                                               __    __     
+ /'\_/`\        /\ \__                                 __        /\ \__/\ \    
+/\      \     __\ \ ,_\    __      ____    ___   _ __ /\_\  _____\ \ ,_\ \ \   
+\ \ \__\ \  /'__`\ \ \/  /'__`\   /',__\  /'___\/\`'__\/\ \/\ '__`\ \ \/\ \ \  
+ \ \ \_/\ \/\  __/\ \ \_/\ \L\.\_/\__, `\/\ \__/\ \ \/ \ \ \ \ \L\ \ \ \_\ \_\ 
+  \ \_\\ \_\ \____\\ \__\ \__/.\_\/\____/\ \____\\ \_\  \ \_\ \ ,__/\ \__\\/\_\
+   \/_/ \/_/\/____/ \/__/\/__/\/_/\/___/  \/____/ \/_/   \/_/\ \ \/  \/__/ \/_/
+                                                              \ \_\            
+                                                               \/_/            
 -+* You are inside an online editor. 
                Make your changes and run it! *+-
 
 The program must compile and complete execution under 5
-seconds. You can use any .Net standard class but note 
-that there are no network interfaces available to the 
-program. File IO is allowed and you can write something
-to disk in the current directory, however the space 
-available is just a few kilobytes and the contents are
-destroyed after each run.
+seconds. You can use any JavaScript standard API when
+compiling the code (macros) but note that there are no
+network interfaces available to the program. File IO is
+allowed and you can write something to disk in the current
+directory, however the space available is just a few
+kilobytes and the contents are destroyed after each run.
 """
 
-def foo(boo):
-    print "Credits"
-    print "=" * 7
-    print "Boo compiler by Rodrigo B. de Oliveira"
-    print "Online compiler by Iván -DrSlump- Montes"
-    print ""
-    print "Remember, this is $boo not Python!"
+var credits = line-sep -> 
+  console.log "Credits"
+  console.log line-sep
+  console.log "Metascript compiler by Massimiliano Mantione"
+  console.log "Online compiler by Iván -DrSlump- Montes"
 
-foo('BOO')
+credits '==============='
       </textarea>
     </div>
     <div class="ui-layout-east">
@@ -622,16 +615,16 @@ foo('BOO')
 
   <div class="ui-layout-north">
     <div id="logo">
-      TryBoo v0.1
+      TryMetascript v0.1
     </div>
 
-    <div id="toolbar" class="ui-widget-header ui-corner-all">
+    a<div id="toolbar" class="ui-widget-header ui-corner-all">
       <button id="runit">Run it!</button>
 
-      <span id="lang-selector" title="Switch between standard Boo and BooJs">
+      <!-- span id="lang-selector" title="Switch between standard Boo and BooJs">
         <input type="radio" id="lang-selector-boo" name="radio" value="boo" checked="checked"/><label for="lang-selector-boo">Boo</label>
         <input type="radio" id="lang-selector-boojs" name="radio" value="boojs" /><label for="lang-selector-boojs">BooJs</label>
-      </span>
+      </span -->
     </div>
 
   </div>
@@ -644,7 +637,7 @@ The results of compiling and running the source code above will be shown here.
 
 ## Credits
 
-Boo compiler by Rodrigo B. de Oliveira
+Metascript compiler by Massimiliano Mantione
 Online compiler by Iván -DrSlump- Montes
     </pre>
   </div>

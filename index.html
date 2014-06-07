@@ -180,12 +180,13 @@
               (new Function('console', json.js))(mockedConsole);
             } catch (e) {
               mockedConsole.log((e.stack || e) + '\n');
+              throw e;
+            } finally {
               $('#console').append(
                 '<hr/>' +
                 mockedConsole.output.replace('<', '&lt;').replace('&', '&amp;').replace('\n', '<br/>')
               );
-              throw e;
-            } finally {
+              
               // Keep the viewport at the bottom
               var south = $('.ui-layout-south');
               south.animate({scrollTop: south.prop('scrollHeight')});

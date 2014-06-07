@@ -13,7 +13,7 @@ export LANG=en_US.UTF-8
 NODE=/usr/local/bin/node
 NODE_OPTS=
 MJS="$NODE $NODE_OPTS /opt/metascript/bin/mjs"
-MJS_OPTS="--no-color"
+MJS_OPTS="--no-color --verbose --map --map-embed --map-source"
 
 # Print out mono and Boo versions
 NODE_VERSION=`$NODE --version | head -1`
